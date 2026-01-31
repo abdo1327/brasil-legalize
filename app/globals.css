@@ -1,0 +1,434 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================================
+ * CSS CUSTOM PROPERTIES (Design Tokens)
+ * Brasil Legalize - Brazilian Flag Inspired Colors
+ *
+ * Primary: #00b27f (Green)
+ * Secondary: #3d6ec3 (Blue)
+ * Accent: #facc15 (Gold)
+ *
+ * DEFAULT LOCALE: Arabic (RTL)
+ * ============================================================================ */
+
+@layer base {
+  :root {
+    /* Brazilian Color Palette */
+    --color-primary: 160 100% 35%; /* #00b27f */
+    --color-primary-50: 160 100% 97%;
+    --color-primary-100: 160 100% 90%;
+    --color-primary-200: 160 100% 80%;
+    --color-primary-300: 160 100% 60%;
+    --color-primary-400: 160 100% 45%;
+    --color-primary-500: 160 100% 35%;
+    --color-primary-600: 160 100% 30%;
+    --color-primary-700: 160 100% 25%;
+    --color-primary-800: 160 100% 20%;
+    --color-primary-900: 160 100% 15%;
+
+    --color-secondary: 221 53% 50%; /* #3d6ec3 */
+    --color-secondary-50: 221 53% 97%;
+    --color-secondary-100: 221 53% 90%;
+    --color-secondary-200: 221 53% 80%;
+    --color-secondary-300: 221 53% 65%;
+    --color-secondary-400: 221 53% 55%;
+    --color-secondary-500: 221 53% 50%;
+    --color-secondary-600: 221 53% 45%;
+    --color-secondary-700: 221 53% 38%;
+    --color-secondary-800: 221 53% 30%;
+    --color-secondary-900: 221 53% 22%;
+
+    --color-accent: 48 96% 53%; /* #facc15 */
+    --color-accent-50: 48 100% 96%;
+    --color-accent-100: 48 96% 89%;
+    --color-accent-200: 48 96% 77%;
+    --color-accent-300: 48 96% 65%;
+    --color-accent-400: 48 96% 58%;
+    --color-accent-500: 48 96% 53%;
+    --color-accent-600: 45 93% 47%;
+    --color-accent-700: 40 92% 38%;
+    --color-accent-800: 35 91% 32%;
+    --color-accent-900: 30 89% 26%;
+
+    /* Semantic Colors */
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: var(--color-primary-500);
+    --primary-foreground: 0 0% 100%;
+    --secondary: var(--color-secondary-500);
+    --secondary-foreground: 0 0% 100%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: var(--color-accent-500);
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: var(--color-primary-500);
+    --radius: 0.75rem;
+
+    /* Success, Warning, Error */
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
+    --warning: 48 96% 53%;
+    --warning-foreground: 222.2 84% 4.9%;
+    --error: 0 84.2% 60.2%;
+    --error-foreground: 0 0% 100%;
+
+    color-scheme: light;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary-foreground: 0 0% 100%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+
+    color-scheme: dark;
+  }
+}
+
+/* ============================================================================
+ * BASE STYLES
+ * ============================================================================ */
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+
+  /* RTL Support */
+  [dir="rtl"] {
+    @apply text-right;
+  }
+
+  [dir="ltr"] {
+    @apply text-left;
+  }
+
+  [dir="rtl"] .rtl\:text-left {
+    @apply text-left;
+  }
+
+  /* Font Families */
+  .font-sans {
+    font-family: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
+      "Segoe UI", Roboto, Arial, sans-serif;
+  }
+
+  .font-arabic {
+    font-family: var(--font-noto-arabic), "Noto Sans Arabic", "Segoe UI",
+      Tahoma, sans-serif;
+  }
+
+  /* Heading Typography */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-semibold tracking-tight;
+  }
+
+  h1 {
+    @apply text-4xl md:text-5xl lg:text-6xl;
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl;
+  }
+
+  h3 {
+    @apply text-2xl md:text-3xl;
+  }
+
+  h4 {
+    @apply text-xl md:text-2xl;
+  }
+
+  /* Links */
+  a {
+    @apply transition-colors duration-200;
+  }
+
+  /* Focus States */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* Selection */
+  ::selection {
+    @apply bg-primary/20 text-foreground;
+  }
+}
+
+/* ============================================================================
+ * COMPONENT STYLES
+ * ============================================================================ */
+
+@layer components {
+  /* Container */
+  .container {
+    @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Cards - Glassmorphism Style */
+  .card {
+    @apply rounded-xl border border-white/20 bg-white/80 shadow-lg backdrop-blur-sm;
+    @apply transition-all duration-300 hover:shadow-xl;
+  }
+
+  .card-glass {
+    @apply rounded-xl border border-white/30 bg-white/60 shadow-lg backdrop-blur-md;
+    @apply transition-all duration-300 hover:bg-white/70;
+  }
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5;
+    @apply font-medium transition-all duration-200;
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
+    @apply disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply btn bg-primary;
+    color: white !important;
+    @apply hover:bg-primary/90 focus:ring-primary;
+  }
+
+  .btn-secondary {
+    @apply btn bg-secondary;
+    color: white !important;
+    @apply hover:bg-secondary/90 focus:ring-secondary;
+  }
+
+  .btn-accent {
+    @apply btn bg-accent text-accent-foreground;
+    @apply hover:bg-accent/90 focus:ring-accent;
+  }
+
+  .btn-outline {
+    @apply btn border-2 border-primary bg-transparent text-primary;
+    @apply hover:bg-primary hover:text-primary-foreground focus:ring-primary;
+  }
+
+  .btn-ghost {
+    @apply btn bg-transparent text-foreground;
+    @apply hover:bg-muted focus:ring-primary;
+  }
+
+  /* Inputs - Filled Style */
+  .input {
+    @apply w-full rounded-lg border-0 bg-muted px-4 py-3;
+    @apply text-foreground placeholder:text-muted-foreground;
+    @apply transition-all duration-200;
+    @apply focus:bg-background focus:ring-2 focus:ring-primary;
+  }
+
+  .input-outlined {
+    @apply w-full rounded-lg border border-border bg-background px-4 py-3;
+    @apply text-foreground placeholder:text-muted-foreground;
+    @apply transition-all duration-200;
+    @apply focus:border-primary focus:ring-2 focus:ring-primary/20;
+  }
+
+  /* Badges - Soft Style */
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-3 py-1;
+    @apply text-xs font-medium;
+  }
+
+  .badge-primary {
+    @apply badge bg-primary/10 text-primary;
+  }
+
+  .badge-secondary {
+    @apply badge bg-secondary/10 text-secondary;
+  }
+
+  .badge-accent {
+    @apply badge bg-accent/10 text-accent-foreground;
+  }
+
+  .badge-success {
+    @apply badge bg-success/10 text-success;
+  }
+
+  .badge-warning {
+    @apply badge bg-warning/10 text-warning;
+  }
+
+  .badge-error {
+    @apply badge bg-error/10 text-error;
+  }
+
+  /* Section Styles */
+  .section {
+    @apply py-16 md:py-24;
+  }
+
+  .section-header {
+    @apply mx-auto max-w-3xl text-center;
+  }
+
+  .section-title {
+    @apply text-3xl font-bold tracking-tight md:text-4xl;
+  }
+
+  .section-subtitle {
+    @apply mt-4 text-lg text-muted-foreground;
+  }
+
+  /* Navigation */
+  .nav-link {
+    @apply relative px-3 py-2 text-sm font-medium text-muted-foreground;
+    @apply transition-colors duration-200 hover:text-foreground;
+  }
+
+  .nav-link-active {
+    @apply text-primary;
+  }
+
+  .nav-link::after {
+    @apply absolute bottom-0 left-0 h-0.5 w-0 bg-primary;
+    @apply transition-all duration-200;
+    content: "";
+  }
+
+  [dir="rtl"] .nav-link::after {
+    @apply left-auto right-0;
+  }
+
+  .nav-link:hover::after,
+  .nav-link-active::after {
+    @apply w-full;
+  }
+}
+
+/* ============================================================================
+ * UTILITY CLASSES
+ * ============================================================================ */
+
+@layer utilities {
+  /* Text Balance */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* RTL Utilities */
+  .flip-rtl {
+    @apply rtl:scale-x-[-1];
+  }
+
+  .space-flip {
+    @apply rtl:space-x-reverse;
+  }
+
+  /* Animation */
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out forwards;
+  }
+
+  .animate-slide-in-right {
+    animation: slideInRight 0.5s ease-out forwards;
+  }
+
+  [dir="rtl"] .animate-slide-in-right {
+    animation: slideInLeft 0.5s ease-out forwards;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideInRight {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slideInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Spinner - Circle Style */
+  .spinner {
+    @apply h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent;
+  }
+
+  .spinner-lg {
+    @apply h-8 w-8;
+  }
+
+  /* Hide scrollbar */
+  .hide-scrollbar,
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar,
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}

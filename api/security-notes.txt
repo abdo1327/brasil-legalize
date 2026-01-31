@@ -1,0 +1,4 @@
+Security notes:
+- Set ADMIN_EMAIL and ADMIN_PASSWORD in environment.
+- Consider MFA and stronger session handling.
+- Add malware scanning if possible.
