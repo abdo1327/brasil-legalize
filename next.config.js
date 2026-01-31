@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  outputFileTracing: false
+  // Don't disable outputFileTracing - it breaks Railway/container deployments
 };
 
 module.exports = nextConfig;
