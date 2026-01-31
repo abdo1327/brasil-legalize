@@ -1,13 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Pool } from 'pg';
-
-const pool = new Pool({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'brasil_legalize',
-  password: '1234',
-  port: 5432,
-});
+import pool from '@/lib/db';
 
 // GET - Validate upload token and get document request info
 export async function GET(request: NextRequest) {

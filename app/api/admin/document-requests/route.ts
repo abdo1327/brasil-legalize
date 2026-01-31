@@ -1,16 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Pool } from 'pg';
+import pool from '@/lib/db';
 import { mkdir } from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
-
-const pool = new Pool({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'brasil_legalize',
-  password: '1234',
-  port: 5432,
-});
 
 // Generate a unique upload token
 function generateUploadToken(): string {
