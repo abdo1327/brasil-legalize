@@ -24,13 +24,14 @@ export async function generateStaticParams() {
   return paths;
 }
 
-export async function generateMetadata({ params }: { params: { locale: Locale; slug: string } }): Promise<Metadata> {
-  if (!validSlugs.includes(params.slug)) {
+export async function generateMetadata({ params }: { params: Promise<{ locale: Locale; slug: string }> }): Promise<Metadata> {
+  const { locale, slug } = await params;
+  if (!validSlugs.includes(slug)) {
     return { title: "Service Not Found" };
   }
 
-  const dict = getDictionary(params.locale);
-  const serviceKey = params.slug.replace(/-/g, "") as keyof typeof dict.services.items;
+  const dict = getDictionary(locale);
+  const serviceKey = slug.replace(/-/g, "") as keyof typeof dict.services.items;
   const service = dict.services.items[serviceKey];
 
   if (!service) {
@@ -41,9 +42,9 @@ export async function generateMetadata({ params }: { params: { locale: Locale; s
     title: service.title,
     description: service.description,
     alternates: {
-      canonical: `/${params.locale}/services/${params.slug}`,
+      canonical: `/${locale}/services/${slug}`,
       languages: Object.fromEntries(
-        locales.map((l) => [l === "pt-br" ? "pt-BR" : l, `/${l}/services/${params.slug}`])
+        locales.map((l) => [l === "pt-br" ? "pt-BR" : l, `/${l}/services/${slug}`])
       ),
     },
   };
@@ -79,8 +80,8 @@ function IconDocument({ className }: { className?: string }) {
   );
 }
 
-export default async function ServicePage({ params }: { params: { slug: string; locale: Locale } }) {
-  const { locale, slug } = params;
+export default async function ServicePage({ params }: { params: Promise<{ slug: string; locale: Locale }> }) {
+  const { locale, slug } = await params;
 
   // Validate slug
   if (!validSlugs.includes(slug)) {

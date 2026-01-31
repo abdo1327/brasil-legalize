@@ -19,7 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 
 interface TermsPageProps {
-  params: { locale: Locale };
+  params: Promise<{ locale: Locale }>;
 }
 
 // Generate static params for all locales
@@ -33,7 +33,8 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: TermsPageProps): Promise<Metadata> {
-  const dict = getDictionary(params.locale);
+  const { locale } = await params;
+  const dict = getDictionary(locale);
 
   return {
     title: dict.terms.metaTitle,
@@ -46,8 +47,8 @@ export async function generateMetadata({
   };
 }
 
-export default function TermsPage({ params }: TermsPageProps) {
-  const { locale } = params;
+export default async function TermsPage({ params }: TermsPageProps) {
+  const { locale } = await params;
   const dict = getDictionary(locale);
   const rtl = isRTL(locale);
 

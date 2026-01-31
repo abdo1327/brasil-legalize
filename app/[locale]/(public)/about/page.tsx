@@ -1,13 +1,14 @@
 import { Metadata } from "next";
 import { getDictionary, isRTL, type Locale, locales } from "../../../../lib/i18n";
 
-export async function generateMetadata({ params }: { params: { locale: Locale } }): Promise<Metadata> {
-  const dict = getDictionary(params.locale);
+export async function generateMetadata({ params }: { params: Promise<{ locale: Locale }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const dict = getDictionary(locale);
   return {
     title: dict.about.title,
     description: dict.about.description,
     alternates: {
-      canonical: `/${params.locale}/about`,
+      canonical: `/${locale}/about`,
       languages: Object.fromEntries(
         locales.map((l) => [l === "pt-br" ? "pt-BR" : l, `/${l}/about`])
       ),
@@ -52,9 +53,10 @@ function IconStar({ className }: { className?: string }) {
 
 const ValueIcons = [IconHandshake, IconBolt, IconGlobe, IconStar];
 
-export default async function AboutPage({ params }: { params: { locale: Locale } }) {
-  const dict = getDictionary(params.locale);
-  const rtl = isRTL(params.locale);
+export default async function AboutPage({ params }: { params: Promise<{ locale: Locale }> }) {
+  const { locale } = await params;
+  const dict = getDictionary(locale);
+  const rtl = isRTL(locale);
 
   return (
     <div>
@@ -158,7 +160,7 @@ export default async function AboutPage({ params }: { params: { locale: Locale }
             {dict.contact.subtitle}
           </p>
           <a
-            href={`/${params.locale}/contact`}
+            href={`/${locale}/contact`}
             className="mt-8 inline-block rounded-xl bg-white px-8 py-4 font-bold text-secondary shadow-lg transition-all hover:shadow-xl hover:scale-105"
           >
             {dict.cta.submit}

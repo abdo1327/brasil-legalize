@@ -33,9 +33,10 @@ import { cn } from "../../lib/utils";
 export async function generateMetadata({
   params,
 }: {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
-  const locale = params.locale as Locale;
+  const { locale: localeParam } = await params;
+  const locale = localeParam as Locale;
   const dict = getDictionary(locale);
 
   return {
@@ -168,12 +169,13 @@ function IconCheck({ className }: { className?: string }) {
 // PAGE COMPONENT
 // ============================================================================
 
-export default function HomePage({
+export default async function HomePage({
   params,
 }: {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
-  const locale = params.locale as Locale;
+  const { locale: localeParam } = await params;
+  const locale = localeParam as Locale;
   const dict = getDictionary(locale);
   const rtl = isRTL(locale);
 

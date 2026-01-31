@@ -48,6 +48,7 @@ function IconLoader({ className }: { className?: string }) {
 }
 
 export default function ContactPage({ params }: { params: { locale: Locale } }) {
+  // Note: Client component - params are resolved synchronously by Next.js at render time
   const dict = getDictionary(params.locale);
   const rtl = isRTL(params.locale);
   const [formData, setFormData] = useState({

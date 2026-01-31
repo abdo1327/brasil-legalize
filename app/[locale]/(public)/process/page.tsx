@@ -1,13 +1,14 @@
 import { Metadata } from "next";
 import { getDictionary, isRTL, type Locale, locales } from "../../../../lib/i18n";
 
-export async function generateMetadata({ params }: { params: { locale: Locale } }): Promise<Metadata> {
-  const dict = getDictionary(params.locale);
+export async function generateMetadata({ params }: { params: Promise<{ locale: Locale }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const dict = getDictionary(locale);
   return {
     title: dict.process.title,
     description: dict.process.description,
     alternates: {
-      canonical: `/${params.locale}/process`,
+      canonical: `/${locale}/process`,
       languages: Object.fromEntries(
         locales.map((l) => [l === "pt-br" ? "pt-BR" : l, `/${l}/process`])
       ),
@@ -15,9 +16,10 @@ export async function generateMetadata({ params }: { params: { locale: Locale } 
   };
 }
 
-export default async function ProcessPage({ params }: { params: { locale: Locale } }) {
-  const dict = getDictionary(params.locale);
-  const rtl = isRTL(params.locale);
+export default async function ProcessPage({ params }: { params: Promise<{ locale: Locale }> }) {
+  const { locale } = await params;
+  const dict = getDictionary(locale);
+  const rtl = isRTL(locale);
 
   const colors = ["bg-primary", "bg-secondary", "bg-accent", "bg-primary", "bg-secondary"];
 
@@ -69,7 +71,7 @@ export default async function ProcessPage({ params }: { params: { locale: Locale
             <p className="mb-6 text-lg text-slate-600">
               {dict.contact.subtitle}
             </p>
-            <a href={`/${params.locale}/contact`} className="btn-primary text-lg px-8 py-4">
+            <a href={`/${locale}/contact`} className="btn-primary text-lg px-8 py-4">
               {dict.cta.submit}
             </a>
           </div>

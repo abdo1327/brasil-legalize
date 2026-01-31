@@ -29,11 +29,11 @@ export const dynamic = "force-dynamic";
 
 interface LocaleLayoutProps {
   children: ReactNode;
-  params: { locale: Locale };
+  params: Promise<{ locale: Locale }>;
 }
 
-export default function LocaleLayout({ children, params }: LocaleLayoutProps) {
-  const locale = params.locale;
+export default async function LocaleLayout({ children, params }: LocaleLayoutProps) {
+  const { locale } = await params;
   const direction = getDirection(locale);
   const rtl = isRTL(locale);
   const dict = getDictionary(locale);

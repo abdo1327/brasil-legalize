@@ -44,6 +44,7 @@ function FAQItem({ question, answer, isOpen, onClick, rtl }: {
 }
 
 export default function FAQPage({ params }: { params: { locale: Locale } }) {
+  // Note: Client component - params are resolved synchronously by Next.js at render time
   const dict = getDictionary(params.locale);
   const rtl = isRTL(params.locale);
   const [openIndex, setOpenIndex] = useState<number | null>(0);

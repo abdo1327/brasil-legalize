@@ -4,8 +4,9 @@ import { Section } from "../../../components/Section";
 
 export const dynamic = "force-dynamic";
 
-export default function HomePage({ params }: { params: { locale: "en" | "ar" | "es" | "pt-br" } }) {
-  const dict = getDictionary(params.locale);
+export default async function HomePage({ params }: { params: Promise<{ locale: "en" | "ar" | "es" | "pt-br" }> }) {
+  const { locale } = await params;
+  const dict = getDictionary(locale);
 
   return (
     <div>
@@ -17,8 +18,8 @@ export default function HomePage({ params }: { params: { locale: "en" | "ar" | "
               <h1 className="mt-4 text-4xl font-semibold text-slate-900">{dict.home.hero.title}</h1>
               <p className="mt-4 text-base text-slate-600">{dict.home.hero.description}</p>
               <div className="mt-6 flex flex-wrap gap-3">
-                <Link className="btn-primary" href={`/${params.locale}/eligibility`}>{dict.cta.checkEligibility}</Link>
-                <Link className="btn-outline" href={`/${params.locale}/book`}>{dict.cta.scheduleConsult}</Link>
+                <Link className="btn-primary" href={`/${locale}/eligibility`}>{dict.cta.checkEligibility}</Link>
+                <Link className="btn-outline" href={`/${locale}/book`}>{dict.cta.scheduleConsult}</Link>
                 <a className="btn-outline" href="https://wa.me/000000000">{dict.cta.sendMessage}</a>
               </div>
             </div>
