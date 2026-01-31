@@ -11,7 +11,7 @@ export default function StatusPage({ params }: { params: { token: string } }) {
   const [data, setData] = useState<StatusData | null>(null);
 
   useEffect(() => {
-    fetch(`/api/status.php?token=${params.token}`)
+    fetch(`/api/status?token=${params.token}`)
       .then((res) => res.json())
       .then(setData)
       .catch(() => setData({ milestones: ["Docs review"], nextActions: ["Awaiting documents"] }));

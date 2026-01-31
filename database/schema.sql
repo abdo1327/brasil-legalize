@@ -158,7 +158,7 @@ CREATE TABLE IF NOT EXISTS package_services (
 -- Password: Admin@123456 (change immediately in production!)
 -- ============================================
 INSERT INTO admins (email, password_hash, name, role, is_active) VALUES
-('admin@brasillegalize.com', '$argon2id$v=19$m=65536,t=3,p=4$c29tZXNhbHQ$RdescudvJCsgt3ube/GQQ5E9DxJqIo6Ep0qWLhXhZB0', 'System Admin', 'super_admin', TRUE)
+('admin@maocean360.com', '$argon2id$v=19$m=65536,t=3,p=4$c29tZXNhbHQ$RdescudvJCsgt3ube/GQQ5E9DxJqIo6Ep0qWLhXhZB0', 'System Admin', 'super_admin', TRUE)
 ON CONFLICT (email) DO NOTHING;
 
 -- ============================================

@@ -87,7 +87,7 @@ try {
     
     // Show default admin credentials
     echo "Default admin credentials:\n";
-    echo "  Email: admin@brasillegalize.com\n";
+    echo "  Email: admin@maocean360.com\n";
     echo "  Password: Admin@123456\n";
     echo "\n⚠️  IMPORTANT: Change the default password immediately!\n\n";
     

@@ -311,7 +311,7 @@ async function logConsentToServer(
         ? window.location.pathname.split("/")[1] || "ar"
         : "ar";
 
-    await fetch("/api/consent.php", {
+    await fetch("/api/consent", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

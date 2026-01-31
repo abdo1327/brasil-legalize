@@ -227,16 +227,17 @@ export default function HomePage({
               {dict.home.hero.description}
             </p>
 
-            {/* CTA Buttons */}
+            {/* CTA Buttons - 3 buttons */}
             <div
               className={cn(
-                "flex flex-col sm:flex-row items-center justify-center gap-4",
+                "flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4",
                 rtl && "sm:flex-row-reverse"
               )}
             >
+              {/* Primary: Apply Now */}
               <Link
-                href={`/${locale}/book`}
-                className="btn-primary group w-full sm:w-auto px-8 py-3.5 text-base shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-all"
+                href={`/${locale}/apply`}
+                className="btn-primary group w-full sm:w-auto px-6 py-3 text-base shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-all"
               >
                 {dict.cta.submit}
                 <IconArrowRight
@@ -246,9 +247,17 @@ export default function HomePage({
                   )}
                 />
               </Link>
+              {/* Accent: Book Consultation (Yellow) */}
+              <Link
+                href={`/${locale}/book`}
+                className="w-full sm:w-auto px-6 py-3 text-base font-semibold rounded-lg bg-accent text-slate-900 hover:bg-accent/90 shadow-lg shadow-accent/30 hover:shadow-xl hover:shadow-accent/40 transition-all flex items-center justify-center gap-2"
+              >
+                {dict.cta.scheduleConsult}
+              </Link>
+              {/* Secondary: View Services */}
               <Link
                 href={`/${locale}/services`}
-                className="btn-secondary w-full sm:w-auto px-8 py-3.5 text-base"
+                className="btn-secondary w-full sm:w-auto px-6 py-3 text-base"
               >
                 {dict.cta.viewServices}
               </Link>

@@ -4,6 +4,18 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useAdminLocale } from '@/components/admin/Header';
 
+// Common document types for requests
+const DOCUMENT_TYPES = [
+  { id: 'passport', label: 'Passport Copy' },
+  { id: 'birth_certificate', label: 'Birth Certificate' },
+  { id: 'marriage_certificate', label: 'Marriage Certificate' },
+  { id: 'proof_of_residence', label: 'Proof of Residence' },
+  { id: 'bank_statement', label: 'Bank Statement' },
+  { id: 'employment_letter', label: 'Employment Letter' },
+  { id: 'photo', label: 'Passport Photo' },
+  { id: 'other', label: 'Other Document' },
+];
+
 // 4 phases × 4 statuses = 16 total
 const WORKFLOW = {
   phases: [
@@ -115,13 +127,22 @@ export default function ApplicationsPage() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'warning' } | null>(null);
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
+  
+  // Document request modal state
+  const [showDocRequestModal, setShowDocRequestModal] = useState(false);
+  const [selectedDocTypes, setSelectedDocTypes] = useState<string[]>([]);
+  const [docRequestMessage, setDocRequestMessage] = useState('');
+  const [docRequestDueDate, setDocRequestDueDate] = useState('');
+  const [creatingDocRequest, setCreatingDocRequest] = useState(false);
+  const [generatedUploadLink, setGeneratedUploadLink] = useState<string | null>(null);
 
   const fetchApplications = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/applications');
       const data = await res.json();
       if (data.success) {
-        setApplications(data.data);
+        // API returns { success, items } not { success, data }
+        setApplications(data.items || data.data || []);
       }
     } catch (error) {
       console.error('Failed to fetch applications:', error);
@@ -154,7 +175,7 @@ export default function ApplicationsPage() {
       const data = await res.json();
       if (data.success) {
         await fetchApplications();
-        setSelectedApp(data.data);
+        setSelectedApp(data.application || data.data || null);
         setShowStatusModal(false);
         setStatusNote('');
         setNewStatus('');
@@ -169,6 +190,70 @@ export default function ApplicationsPage() {
     } catch (error) {
       console.error('Failed to update status:', error);
     }
+  };
+
+  // Create document request
+  const createDocumentRequest = async () => {
+    if (!selectedApp || selectedDocTypes.length === 0) {
+      setToast({ message: 'Please select at least one document type', type: 'warning' });
+      return;
+    }
+
+    setCreatingDocRequest(true);
+    try {
+      const res = await fetch('/api/admin/document-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: selectedApp.client_id,
+          case_id: selectedApp.id,
+          requested_documents: selectedDocTypes.map(type => {
+            const docType = DOCUMENT_TYPES.find(d => d.id === type);
+            return { type, label: docType?.label || type };
+          }),
+          message: docRequestMessage || 'Please upload the requested documents.',
+          due_date: docRequestDueDate || null,
+          admin_name: 'Admin',
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setGeneratedUploadLink(data.upload_link);
+        setToast({ message: 'Document request created! Upload link generated.', type: 'success' });
+        
+        // Update application status to documents_pending if in phase 3
+        if (selectedApp.phase === 3 && selectedApp.status !== 'documents_pending') {
+          await fetch('/api/admin/applications', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: selectedApp.id,
+              status: 'documents_pending',
+              note: 'Document request sent to client',
+              admin_name: 'Admin',
+            }),
+          });
+          await fetchApplications();
+        }
+      } else {
+        setToast({ message: data.error || 'Failed to create document request', type: 'warning' });
+      }
+    } catch (error) {
+      console.error('Failed to create document request:', error);
+      setToast({ message: 'Failed to create document request', type: 'warning' });
+    } finally {
+      setCreatingDocRequest(false);
+    }
+  };
+
+  // Reset document request modal
+  const resetDocRequestModal = () => {
+    setShowDocRequestModal(false);
+    setSelectedDocTypes([]);
+    setDocRequestMessage('');
+    setDocRequestDueDate('');
+    setGeneratedUploadLink(null);
   };
 
   const getPhaseApps = (phase: number) => {
@@ -210,7 +295,7 @@ export default function ApplicationsPage() {
         </div>
         <div className="flex items-center gap-4">
           <span className="text-sm text-neutral-500">
-            Total: <strong className="text-primary">{applications.length}</strong>
+            Total: <strong className="text-primary">{applications?.length || 0}</strong>
           </span>
         </div>
       </div>
@@ -338,8 +423,8 @@ export default function ApplicationsPage() {
 
       {/* Application Detail Sidebar */}
       {selectedApp && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex justify-end">
-          <div className="w-full max-w-lg bg-white h-full overflow-y-auto shadow-2xl">
+        <div className="fixed inset-0 bg-black/50 z-50 flex justify-end" onClick={(e) => e.target === e.currentTarget && setSelectedApp(null)}>
+          <div className="w-full max-w-lg bg-white h-screen overflow-y-auto shadow-2xl flex flex-col">
             {/* Header */}
             <div className="sticky top-0 bg-gradient-to-r from-primary to-primary/90 text-white p-5 flex items-center justify-between">
               <div>
@@ -492,19 +577,11 @@ export default function ApplicationsPage() {
                   {selectedApp.token && (
                     <button
                       onClick={async () => {
-                        if (confirm('Resend portal access credentials to client?')) {
-                          await fetch('/api/admin/applications/notify', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                              applicationId: selectedApp.id,
-                              template: 'tokenLink',
-                              data: { password: selectedApp.password },
-                            }),
-                          });
-                          alert('Email sent!');
-                          fetchApplications();
-                        }
+                        // Open email client with portal access info
+                        const subject = encodeURIComponent('Your Brasil Legalize Portal Access');
+                        const body = encodeURIComponent(`Hello ${selectedApp.name},\n\nHere are your portal access credentials:\n\nToken: ${selectedApp.token}\nPassword: ${selectedApp.password || 'Contact support'}\n\nAccess your portal at: ${window.location.origin}/track\n\nBest regards,\nBrasil Legalize Team`);
+                        window.open(`mailto:${selectedApp.email}?subject=${subject}&body=${body}`, '_blank');
+                        setToast({ message: 'Email client opened with portal access details', type: 'success' });
                       }}
                       className="w-full flex items-center gap-3 p-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors text-left"
                     >
@@ -519,22 +596,7 @@ export default function ApplicationsPage() {
                     </button>
                   )}
                   <button
-                    onClick={async () => {
-                      const docs = prompt('Enter documents needed (comma separated):\nExample: Passport copy, Proof of residence, Bank statement');
-                      if (docs) {
-                        await fetch('/api/admin/applications/notify', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({
-                            applicationId: selectedApp.id,
-                            template: 'documentRequest',
-                            data: { documents: docs.split(',').map(d => d.trim()) },
-                          }),
-                        });
-                        alert('Document request email sent!');
-                        fetchApplications();
-                      }
-                    }}
+                    onClick={() => setShowDocRequestModal(true)}
                     className="w-full flex items-center gap-3 p-3 bg-yellow-50 hover:bg-yellow-100 rounded-lg transition-colors text-left"
                   >
                     <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
@@ -542,27 +604,18 @@ export default function ApplicationsPage() {
                     </div>
                     <div className="flex-1">
                       <p className="font-medium text-yellow-700">Request Documents</p>
-                      <p className="text-xs text-yellow-600">Ask client to upload documents</p>
+                      <p className="text-xs text-yellow-600">Create upload link & notify client</p>
                     </div>
-                    <i className="ri-send-plane-line text-yellow-600"></i>
+                    <i className="ri-add-circle-line text-yellow-600"></i>
                   </button>
                   <button
-                    onClick={async () => {
-                      await fetch('/api/admin/applications/notify', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          applicationId: selectedApp.id,
-                          template: 'statusUpdate',
-                          data: {
-                            status: selectedApp.status,
-                            statusLabel: WORKFLOW.statuses[selectedApp.status as keyof typeof WORKFLOW.statuses]?.label,
-                            phase: WORKFLOW.phases[selectedApp.phase - 1]?.name,
-                          },
-                        }),
-                      });
-                      alert('Status update email sent!');
-                      fetchApplications();
+                    onClick={() => {
+                      const statusLabel = WORKFLOW.statuses[selectedApp.status as keyof typeof WORKFLOW.statuses]?.label || selectedApp.status;
+                      const phaseName = WORKFLOW.phases[selectedApp.phase - 1]?.name || 'Unknown';
+                      const subject = encodeURIComponent('Application Status Update - Brasil Legalize');
+                      const body = encodeURIComponent(`Hello ${selectedApp.name},\n\nYour application status has been updated:\n\nCurrent Phase: ${phaseName}\nStatus: ${statusLabel}\n\nIf you have any questions, please don't hesitate to contact us.\n\nBest regards,\nBrasil Legalize Team`);
+                      window.open(`mailto:${selectedApp.email}?subject=${subject}&body=${body}`, '_blank');
+                      setToast({ message: 'Email client opened for status update', type: 'success' });
                     }}
                     className="w-full flex items-center gap-3 p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-left"
                   >
@@ -734,6 +787,158 @@ export default function ApplicationsPage() {
               >
                 Update Status
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Document Request Modal */}
+      {showDocRequestModal && selectedApp && (
+        <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="bg-gradient-to-r from-yellow-500 to-orange-500 p-5">
+              <h3 className="text-lg font-bold text-white">Request Documents</h3>
+              <p className="text-white/80 text-sm">Create an upload link for {selectedApp.name}</p>
+            </div>
+            
+            <div className="p-6 space-y-5 overflow-y-auto flex-1">
+              {/* Generated Upload Link */}
+              {generatedUploadLink && (
+                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                  <h4 className="font-semibold text-green-900 mb-3 flex items-center gap-2">
+                    <i className="ri-checkbox-circle-fill text-green-600"></i>
+                    Upload Link Generated!
+                  </h4>
+                  <div className="flex items-center gap-2 mb-3">
+                    <input
+                      type="text"
+                      readOnly
+                      value={`${window.location.origin}${generatedUploadLink}`}
+                      className="flex-1 text-sm bg-white border border-green-200 rounded-lg px-3 py-2 font-mono text-green-800"
+                    />
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}${generatedUploadLink}`);
+                        setToast({ message: 'Upload link copied!', type: 'success' });
+                      }}
+                      className="p-2 bg-green-100 hover:bg-green-200 rounded-lg transition-colors"
+                      title="Copy link"
+                    >
+                      <i className="ri-file-copy-line text-green-700"></i>
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const docs = selectedDocTypes.map(t => DOCUMENT_TYPES.find(d => d.id === t)?.label || t).join('\n- ');
+                      const subject = encodeURIComponent('Documents Required - Brasil Legalize');
+                      const body = encodeURIComponent(`Hello ${selectedApp.name},\n\nWe need the following documents to proceed with your application:\n\n- ${docs}\n\nPlease upload them using this secure link:\n${window.location.origin}${generatedUploadLink}\n\n${docRequestMessage ? `Note: ${docRequestMessage}\n\n` : ''}Best regards,\nBrasil Legalize Team`);
+                      window.open(`mailto:${selectedApp.email}?subject=${subject}&body=${body}`, '_blank');
+                      setToast({ message: 'Email client opened with upload link', type: 'success' });
+                    }}
+                    className="w-full flex items-center justify-center gap-2 p-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium"
+                  >
+                    <i className="ri-mail-send-line"></i>
+                    Send Link via Email
+                  </button>
+                </div>
+              )}
+
+              {!generatedUploadLink && (
+                <>
+                  {/* Document Types Selection */}
+                  <div>
+                    <label className="block text-sm font-semibold text-neutral-700 mb-3">
+                      Select Documents to Request
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {DOCUMENT_TYPES.map((docType) => (
+                        <button
+                          key={docType.id}
+                          onClick={() => {
+                            setSelectedDocTypes(prev => 
+                              prev.includes(docType.id) 
+                                ? prev.filter(t => t !== docType.id)
+                                : [...prev, docType.id]
+                            );
+                          }}
+                          className={`p-3 rounded-lg border text-left text-sm transition-all ${
+                            selectedDocTypes.includes(docType.id)
+                              ? 'bg-yellow-50 border-yellow-300 text-yellow-800'
+                              : 'bg-white border-neutral-200 text-neutral-700 hover:border-yellow-200'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <i className={`${selectedDocTypes.includes(docType.id) ? 'ri-checkbox-circle-fill text-yellow-600' : 'ri-checkbox-blank-circle-line text-neutral-300'}`}></i>
+                            <span>{docType.label}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Custom Message */}
+                  <div>
+                    <label className="block text-sm font-semibold text-neutral-700 mb-2">
+                      Message to Client (optional)
+                    </label>
+                    <textarea
+                      value={docRequestMessage}
+                      onChange={(e) => setDocRequestMessage(e.target.value)}
+                      placeholder="Add any specific instructions or notes..."
+                      rows={3}
+                      className="w-full border border-neutral-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  {/* Due Date */}
+                  <div>
+                    <label className="block text-sm font-semibold text-neutral-700 mb-2">
+                      Due Date (optional)
+                    </label>
+                    <input
+                      type="date"
+                      value={docRequestDueDate}
+                      onChange={(e) => setDocRequestDueDate(e.target.value)}
+                      min={new Date().toISOString().split('T')[0]}
+                      className="w-full border border-neutral-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  {/* Info */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800 flex items-start gap-2">
+                    <i className="ri-information-line text-blue-600 mt-0.5"></i>
+                    <span>This will create a unique upload link and folder structure for the client's documents.</span>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="flex gap-3 p-5 bg-neutral-50 border-t border-neutral-200">
+              <button
+                onClick={resetDocRequestModal}
+                className="flex-1 px-4 py-3 border border-neutral-300 rounded-lg hover:bg-white transition-colors font-medium"
+              >
+                {generatedUploadLink ? 'Close' : 'Cancel'}
+              </button>
+              {!generatedUploadLink && (
+                <button
+                  onClick={createDocumentRequest}
+                  disabled={selectedDocTypes.length === 0 || creatingDocRequest}
+                  className="flex-1 px-4 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold flex items-center justify-center gap-2"
+                >
+                  {creatingDocRequest ? (
+                    <>
+                      <i className="ri-loader-4-line animate-spin"></i>
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <i className="ri-link"></i>
+                      Generate Upload Link
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         </div>

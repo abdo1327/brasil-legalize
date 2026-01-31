@@ -1,83 +1,82 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import { Pool } from 'pg';
 
-const CLIENTS_FILE = path.join(process.cwd(), 'storage', 'data', 'clients.json');
-const APPLICATIONS_FILE = path.join(process.cwd(), 'storage', 'data', 'applications.json');
-const LEADS_FILE = path.join(process.cwd(), 'storage', 'data', 'leads.json');
+const pool = new Pool({
+  user: 'postgres',
+  host: 'localhost',
+  database: 'brasil_legalize',
+  password: '1234',
+  port: 5432,
+});
 
-type ClientNote = {
-  id: string;
-  content: string;
-  created_at: string;
-  created_by: string;
-};
-
-function loadJson(file: string): any[] {
-  try {
-    if (!fs.existsSync(file)) {
-      return [];
-    }
-    const content = fs.readFileSync(file, 'utf-8');
-    return JSON.parse(content) || [];
-  } catch {
-    return [];
-  }
-}
-
-function saveJson(file: string, data: any[]): void {
-  const dir = path.dirname(file);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-  fs.writeFileSync(file, JSON.stringify(data, null, 2));
-}
-
-function generateClientId(): string {
+async function generateClientId(): Promise<string> {
   const year = new Date().getFullYear();
-  const clients = loadJson(CLIENTS_FILE);
-  const count = clients.length + 1;
+  const result = await pool.query(
+    'SELECT COUNT(*) as count FROM clients WHERE client_id LIKE $1',
+    [`CLT-${year}-%`]
+  );
+  const count = parseInt(result.rows[0].count) + 1;
   return `CLT-${year}-${String(count).padStart(5, '0')}`;
 }
 
-function getClientById(clients: any[], id: string) {
-  return clients.find((c) => c.id === id);
+async function generateApplicationId(): Promise<string> {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const result = await pool.query(
+    'SELECT COUNT(*) as count FROM applications WHERE application_id LIKE $1',
+    [`APP-${year}${month}-%`]
+  );
+  const count = parseInt(result.rows[0].count) + 1;
+  return `APP-${year}${month}-${String(count).padStart(4, '0')}`;
 }
 
-function getClientByEmail(clients: any[], email: string) {
-  return clients.find((c) => c.email?.toLowerCase() === email?.toLowerCase());
+async function getClientById(id: string | number) {
+  // If id looks like a client_id (starts with CLT-), search by client_id
+  if (typeof id === 'string' && id.startsWith('CLT-')) {
+    const result = await pool.query('SELECT * FROM clients WHERE client_id = $1', [id]);
+    return result.rows[0] || null;
+  }
+  
+  // Try by numeric id first, then by client_id
+  let result = await pool.query('SELECT * FROM clients WHERE id = $1', [id]);
+  if (result.rows.length === 0) {
+    result = await pool.query('SELECT * FROM clients WHERE client_id = $1', [id]);
+  }
+  return result.rows[0] || null;
 }
 
-function getClientCases(clientId: string) {
-  const applications = loadJson(APPLICATIONS_FILE);
-  const clients = loadJson(CLIENTS_FILE);
-  const client = getClientById(clients, clientId);
+async function getClientByEmail(email: string) {
+  const result = await pool.query(
+    'SELECT * FROM clients WHERE LOWER(email) = LOWER($1) AND (archived = false OR archived IS NULL)',
+    [email]
+  );
+  return result.rows[0] || null;
+}
 
+async function getClientCases(clientId: string | number) {
+  const client = await getClientById(clientId);
   if (!client) return [];
 
-  return applications.filter(
-    (app: any) =>
-      client.cases?.includes(app.id) ||
-      app.email === client.email ||
-      app.lead_id === client.lead_id
+  const result = await pool.query(
+    'SELECT * FROM applications WHERE client_id = $1 OR email = $2',
+    [client.id, client.email]
   );
+  return result.rows;
 }
 
-function getClientProfile(clientId: string) {
-  const clients = loadJson(CLIENTS_FILE);
-  const client = getClientById(clients, clientId);
-
+async function getClientProfile(clientId: string | number) {
+  const client = await getClientById(clientId);
   if (!client) return null;
 
   // Get all cases
-  client.cases_data = getClientCases(clientId);
+  client.cases_data = await getClientCases(clientId);
 
   // Get lead data if exists
   if (client.lead_id) {
-    const leads = loadJson(LEADS_FILE);
-    const lead = leads.find((l: any) => l.id === client.lead_id);
-    if (lead) {
-      client.lead_data = lead;
+    const leadResult = await pool.query('SELECT * FROM leads WHERE id = $1', [client.lead_id]);
+    if (leadResult.rows.length > 0) {
+      client.lead_data = leadResult.rows[0];
     }
   }
 
@@ -95,18 +94,17 @@ export async function GET(request: NextRequest) {
   try {
     if (clientId) {
       if (action === 'profile') {
-        const client = getClientProfile(clientId);
+        const client = await getClientProfile(clientId);
         if (client) {
           return NextResponse.json({ success: true, client });
         } else {
           return NextResponse.json({ success: false, error: 'Client not found' }, { status: 404 });
         }
       } else if (action === 'cases') {
-        const cases = getClientCases(clientId);
+        const cases = await getClientCases(clientId);
         return NextResponse.json({ success: true, cases });
       } else {
-        const clients = loadJson(CLIENTS_FILE);
-        const client = getClientById(clients, clientId);
+        const client = await getClientById(clientId);
         if (client) {
           return NextResponse.json({ success: true, client });
         } else {
@@ -115,38 +113,38 @@ export async function GET(request: NextRequest) {
       }
     } else {
       // List all clients with filters
-      let clients = loadJson(CLIENTS_FILE);
-
-      // Filter out archived
-      clients = clients.filter((c: any) => !c.archived);
+      let query = 'SELECT * FROM clients WHERE (archived = false OR archived IS NULL)';
+      const params: any[] = [];
+      let paramIndex = 1;
 
       if (search) {
-        const searchLower = search.toLowerCase();
-        clients = clients.filter(
-          (c: any) =>
-            c.name?.toLowerCase().includes(searchLower) ||
-            c.email?.toLowerCase().includes(searchLower) ||
-            c.phone?.includes(search) ||
-            c.id?.toLowerCase().includes(searchLower)
-        );
+        query += ` AND (LOWER(name) LIKE LOWER($${paramIndex}) OR LOWER(email) LIKE LOWER($${paramIndex}) OR phone LIKE $${paramIndex} OR client_id LIKE $${paramIndex})`;
+        params.push(`%${search}%`);
+        paramIndex++;
       }
 
       if (source) {
-        clients = clients.filter((c: any) => c.source === source);
+        query += ` AND source = $${paramIndex}`;
+        params.push(source);
+        paramIndex++;
       }
 
       if (historical !== null) {
         const isHistorical = historical === 'true';
-        clients = clients.filter((c: any) => (c.is_historical || false) === isHistorical);
+        query += ` AND (is_historical = $${paramIndex})`;
+        params.push(isHistorical);
+        paramIndex++;
       }
 
-      // Sort by created date (newest first)
-      clients.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      query += ' ORDER BY created_at DESC';
+
+      const result = await pool.query(query, params);
 
       return NextResponse.json({
         success: true,
-        clients,
-        total: clients.length,
+        clients: result.rows,
+        items: result.rows,
+        total: result.rows.length,
       });
     }
   } catch (error) {
@@ -163,73 +161,120 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Name and email are required' }, { status: 400 });
     }
 
-    const clients = loadJson(CLIENTS_FILE);
-
     // Check if client with email already exists
-    const existingClient = getClientByEmail(clients, input.email);
+    const existingClient = await getClientByEmail(input.email);
     if (existingClient) {
       return NextResponse.json(
         {
           success: false,
           error: 'Client with this email already exists',
-          existing_client_id: existingClient.id,
+          existing_client_id: existingClient.client_id || existingClient.id,
         },
         { status: 409 }
       );
     }
 
-    const newClient = {
-      id: generateClientId(),
-      lead_id: input.lead_id || null,
-      name: input.name,
-      email: input.email,
-      phone: input.phone || null,
-      whatsapp: input.whatsapp || input.phone || null,
-      city: input.city || null,
-      country: input.country || null,
-      locale: input.locale || 'en',
-      avatar_url: input.avatar_url || null,
-      service_type: input.service_type || null,
-      package: input.package || null,
-      family_adults: input.family_adults || 2,
-      family_children: input.family_children || 0,
-      expected_travel_date: input.expected_travel_date || null,
-      expected_due_date: input.expected_due_date || null,
-      source: input.source || 'manual',
-      referral_source: input.referral_source || null,
-      is_historical: input.is_historical || false,
-      tags: input.tags || [],
-      financial: {
-        total_paid: input.total_paid || 0,
-        total_due: input.total_due || 0,
-        currency: input.currency || 'USD',
-        payments: input.payments || [],
-      },
-      cases: input.cases || [],
-      notes: [] as ClientNote[],
-      communication: [],
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      created_by: input.created_by || 'admin',
-    };
+    const clientId = await generateClientId();
+    const now = new Date();
 
-    // Add initial note if provided
-    if (input.initial_note) {
-      newClient.notes.push({
-        id: `note-${Date.now()}`,
-        content: input.initial_note,
-        created_at: new Date().toISOString(),
-        created_by: input.created_by || 'admin',
-      });
-    }
+    const result = await pool.query(`
+      INSERT INTO clients (
+        client_id, lead_id, name, email, phone, whatsapp, city, country,
+        locale, avatar_url, service_type, package, family_adults, family_children,
+        expected_travel_date, expected_due_date, source, referral_source,
+        is_historical, tags, total_paid, total_due, currency, payments,
+        notes, communications, status, archived, created_at, updated_at
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8,
+        $9, $10, $11, $12, $13, $14,
+        $15, $16, $17, $18,
+        $19, $20, $21, $22, $23, $24,
+        $25, $26, $27, $28, $29, $30
+      ) RETURNING *
+    `, [
+      clientId,
+      input.lead_id || null,
+      input.name,
+      input.email,
+      input.phone || null,
+      input.whatsapp || input.phone || null,
+      input.city || null,
+      input.country || null,
+      input.locale || 'en',
+      input.avatar_url || null,
+      input.service_type || null,
+      input.package || null,
+      input.family_adults || 2,
+      input.family_children || 0,
+      input.expected_travel_date || null,
+      input.expected_due_date || null,
+      input.source || 'manual',
+      input.referral_source || null,
+      input.is_historical || false,
+      JSON.stringify(input.tags || []),
+      input.total_paid || 0,
+      input.total_due || 0,
+      input.currency || 'USD',
+      JSON.stringify(input.payments || []),
+      input.initial_note 
+        ? JSON.stringify([{
+            id: `note-${Date.now()}`,
+            content: input.initial_note,
+            created_at: now.toISOString(),
+            created_by: input.created_by || 'admin',
+          }])
+        : JSON.stringify([]),
+      JSON.stringify([]),
+      'active',
+      false,
+      now,
+      now
+    ]);
 
-    clients.push(newClient);
-    saveJson(CLIENTS_FILE, clients);
+    const newClient = result.rows[0];
+
+    // Also create an application/case linked to this client
+    const applicationId = await generateApplicationId();
+    const appResult = await pool.query(`
+      INSERT INTO applications (
+        application_id, client_id, lead_id, name, email, phone, locale,
+        service_type, package, phase, status, timeline, notes, documents,
+        created_at, updated_at, archived
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7,
+        $8, $9, $10, $11, $12, $13, $14,
+        $15, $16, $17
+      ) RETURNING *
+    `, [
+      applicationId,
+      newClient.id, // Link to the new client's database ID
+      input.lead_id || null,
+      input.name,
+      input.email,
+      input.phone || null,
+      input.locale || 'en',
+      input.service_type || null,
+      input.package || null,
+      1, // Phase 1: Lead
+      'new', // Initial status
+      JSON.stringify([{
+        status: 'new',
+        timestamp: now.toISOString(),
+        by: input.created_by || 'admin',
+        note: 'Client and case created'
+      }]),
+      JSON.stringify([]),
+      JSON.stringify([]),
+      now,
+      now,
+      false
+    ]);
 
     return NextResponse.json({
       success: true,
       client: newClient,
-      message: 'Client created successfully',
+      application: appResult.rows[0],
+      message: 'Client and case created successfully',
     });
   } catch (error) {
     console.error('Error creating client:', error);
@@ -248,80 +293,107 @@ export async function PATCH(request: NextRequest) {
 
   try {
     const input = await request.json();
-    const clients = loadJson(CLIENTS_FILE);
-    let updatedClient = null;
+    const client = await getClientById(clientId);
 
-    for (let i = 0; i < clients.length; i++) {
-      if (clients[i].id === clientId) {
-        if (action === 'add-note') {
-          clients[i].notes = clients[i].notes || [];
-          clients[i].notes.push({
-            id: `note-${Date.now()}`,
-            content: input.content,
-            created_at: new Date().toISOString(),
-            created_by: input.created_by || 'admin',
-          });
-        } else if (action === 'add-communication') {
-          clients[i].communication = clients[i].communication || [];
-          clients[i].communication.push({
-            id: `comm-${Date.now()}`,
-            type: input.type || 'note',
-            subject: input.subject || '',
-            content: input.content,
-            sent_at: new Date().toISOString(),
-            sent_by: input.sent_by || 'admin',
-          });
-        } else if (action === 'add-payment') {
-          clients[i].financial = clients[i].financial || { total_paid: 0, total_due: 0, currency: 'USD', payments: [] };
-          clients[i].financial.payments = clients[i].financial.payments || [];
-          clients[i].financial.payments.push({
-            id: `pay-${Date.now()}`,
-            amount: input.amount,
-            method: input.method || 'other',
-            reference: input.reference || null,
-            date: input.date || new Date().toISOString().split('T')[0],
-            notes: input.notes || '',
-            recorded_at: new Date().toISOString(),
-            recorded_by: input.recorded_by || 'admin',
-          });
-          clients[i].financial.total_paid = (clients[i].financial.total_paid || 0) + parseFloat(input.amount);
-        } else if (action === 'link-case') {
-          clients[i].cases = clients[i].cases || [];
-          if (!clients[i].cases.includes(input.case_id)) {
-            clients[i].cases.push(input.case_id);
-          }
-        } else {
-          // Regular update
-          const updateableFields = [
-            'name', 'email', 'phone', 'whatsapp', 'city', 'country',
-            'locale', 'avatar_url', 'service_type', 'package',
-            'family_adults', 'family_children', 'expected_travel_date',
-            'expected_due_date', 'tags', 'is_historical', 'referral_source',
-          ];
-
-          for (const field of updateableFields) {
-            if (input[field] !== undefined) {
-              clients[i][field] = input[field];
-            }
-          }
-
-          if (input.financial) {
-            clients[i].financial = { ...clients[i].financial, ...input.financial };
-          }
-        }
-
-        clients[i].updated_at = new Date().toISOString();
-        updatedClient = clients[i];
-        break;
-      }
-    }
-
-    if (!updatedClient) {
+    if (!client) {
       return NextResponse.json({ success: false, error: 'Client not found' }, { status: 404 });
     }
 
-    saveJson(CLIENTS_FILE, clients);
-    return NextResponse.json({ success: true, client: updatedClient });
+    const now = new Date();
+    let updateQuery = '';
+    let updateParams: any[] = [];
+
+    if (action === 'add-note') {
+      const notes = client.notes || [];
+      notes.push({
+        id: `note-${Date.now()}`,
+        content: input.content,
+        created_at: now.toISOString(),
+        created_by: input.created_by || 'admin',
+      });
+      updateQuery = 'UPDATE clients SET notes = $1, updated_at = $2 WHERE id = $3 RETURNING *';
+      updateParams = [JSON.stringify(notes), now, client.id];
+    } else if (action === 'add-communication') {
+      const comms = client.communications || [];
+      comms.push({
+        id: `comm-${Date.now()}`,
+        type: input.type || 'note',
+        subject: input.subject || '',
+        content: input.content,
+        sent_at: now.toISOString(),
+        sent_by: input.sent_by || 'admin',
+      });
+      updateQuery = 'UPDATE clients SET communications = $1, updated_at = $2 WHERE id = $3 RETURNING *';
+      updateParams = [JSON.stringify(comms), now, client.id];
+    } else if (action === 'add-payment') {
+      const payments = client.payments || [];
+      payments.push({
+        id: `pay-${Date.now()}`,
+        amount: input.amount,
+        method: input.method || 'other',
+        reference: input.reference || null,
+        date: input.date || now.toISOString().split('T')[0],
+        notes: input.notes || '',
+        recorded_at: now.toISOString(),
+        recorded_by: input.recorded_by || 'admin',
+      });
+      const newTotalPaid = (parseFloat(client.total_paid) || 0) + parseFloat(input.amount);
+      updateQuery = 'UPDATE clients SET payments = $1, total_paid = $2, updated_at = $3 WHERE id = $4 RETURNING *';
+      updateParams = [JSON.stringify(payments), newTotalPaid, now, client.id];
+    } else if (action === 'link-case') {
+      // This would typically update a junction table or applications table
+      return NextResponse.json({ success: true, client, message: 'Case linked (applications reference client)' });
+    } else {
+      // Regular update - build dynamic query
+      const updateableFields = [
+        'name', 'email', 'phone', 'whatsapp', 'city', 'country',
+        'locale', 'avatar_url', 'service_type', 'package',
+        'family_adults', 'family_children', 'expected_travel_date',
+        'expected_due_date', 'tags', 'is_historical', 'referral_source',
+        'total_paid', 'total_due', 'currency', 'status'
+      ];
+
+      // Date fields that need to convert empty strings to null
+      const dateFields = ['expected_travel_date', 'expected_due_date'];
+
+      const updates: string[] = [];
+      updateParams = [];
+      let paramIdx = 1;
+
+      for (const field of updateableFields) {
+        if (input[field] !== undefined) {
+          let value = input[field];
+          
+          // Handle date fields - convert empty strings to null
+          if (dateFields.includes(field)) {
+            value = value === '' || value === null ? null : value;
+          }
+          
+          if (field === 'tags') {
+            updates.push(`${field} = $${paramIdx}`);
+            updateParams.push(JSON.stringify(value));
+          } else {
+            updates.push(`${field} = $${paramIdx}`);
+            updateParams.push(value);
+          }
+          paramIdx++;
+        }
+      }
+
+      if (updates.length === 0) {
+        return NextResponse.json({ success: true, client });
+      }
+
+      updates.push(`updated_at = $${paramIdx}`);
+      updateParams.push(now);
+      paramIdx++;
+
+      updateParams.push(client.id);
+      updateQuery = `UPDATE clients SET ${updates.join(', ')} WHERE id = $${paramIdx} RETURNING *`;
+    }
+
+    const result = await pool.query(updateQuery, updateParams);
+    return NextResponse.json({ success: true, client: result.rows[0] });
   } catch (error) {
     console.error('Error updating client:', error);
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
@@ -337,23 +409,18 @@ export async function DELETE(request: NextRequest) {
   }
 
   try {
-    const clients = loadJson(CLIENTS_FILE);
-    let found = false;
-
-    for (let i = 0; i < clients.length; i++) {
-      if (clients[i].id === clientId) {
-        clients[i].archived = true;
-        clients[i].archived_at = new Date().toISOString();
-        found = true;
-        break;
-      }
-    }
-
-    if (!found) {
+    const client = await getClientById(clientId);
+    
+    if (!client) {
       return NextResponse.json({ success: false, error: 'Client not found' }, { status: 404 });
     }
 
-    saveJson(CLIENTS_FILE, clients);
+    const now = new Date();
+    await pool.query(
+      'UPDATE clients SET archived = true, archived_at = $1, updated_at = $2 WHERE id = $3',
+      [now, now, client.id]
+    );
+
     return NextResponse.json({ success: true, message: 'Client archived successfully' });
   } catch (error) {
     console.error('Error deleting client:', error);

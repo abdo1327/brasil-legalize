@@ -8,9 +8,10 @@ export default function AdminLoginPage() {
   const [message, setMessage] = useState<string | null>(null);
 
   const handleLogin = async () => {
-    const response = await fetch("/api/auth.php", {
+    const response = await fetch("/api/admin/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: 'include',
       body: JSON.stringify({ email, password })
     });
     const data = await response.json();

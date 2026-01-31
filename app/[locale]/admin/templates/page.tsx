@@ -6,9 +6,10 @@ export default function TemplatesPage() {
   const [template, setTemplate] = useState("");
 
   const saveTemplate = async () => {
-    await fetch("/api/templates.php", {
+    await fetch("/api/admin/templates", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: 'include',
       body: JSON.stringify({ template })
     });
   };

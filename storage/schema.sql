@@ -90,4 +90,4 @@ INSERT INTO services (slug, name_en, name_ar, name_es, name_pt, description_en, 
 
 -- Insert admin user (password: Admin@123456)
 INSERT INTO admin_users (email, password, name, role, is_active) VALUES
-('admin@brasillegalize.com', 'Admin@123456', 'System Administrator', 'super_admin', true);
+('admin@maocean360.com', 'Admin@123456', 'System Administrator', 'super_admin', true);

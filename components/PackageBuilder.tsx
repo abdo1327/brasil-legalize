@@ -40,7 +40,7 @@ export function PackageBuilder({ locale, translations }: PackageBuilderProps) {
     setSubmitError('');
 
     try {
-      const response = await fetch('/api/leads.php', {
+      const response = await fetch('/api/leads', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

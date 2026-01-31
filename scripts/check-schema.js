@@ -1,0 +1,30 @@
+const { Pool } = require('pg');
+const pool = new Pool({ 
+  user: 'postgres', 
+  host: 'localhost', 
+  database: 'brasil_legalize', 
+  password: '1234', 
+  port: 5432 
+});
+
+async function main() {
+  try {
+    const result = await pool.query(`
+      SELECT column_name, data_type 
+      FROM information_schema.columns 
+      WHERE table_name = 'clients' 
+      ORDER BY ordinal_position
+    `);
+    console.log('Clients table columns:');
+    result.rows.forEach(row => console.log(`  ${row.column_name}: ${row.data_type}`));
+    
+    const emailCheck = await pool.query('SELECT email FROM clients');
+    console.log('\nExisting emails:', emailCheck.rows.map(r => r.email));
+  } catch (e) {
+    console.error('Error:', e.message);
+  } finally {
+    pool.end();
+  }
+}
+
+main();

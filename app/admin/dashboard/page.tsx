@@ -161,10 +161,11 @@ export default function DashboardPage() {
     try {
       const response = await fetch('/api/admin/dashboard');
       const result = await response.json();
-      if (result.success) {
-        setStats(result.data.stats);
-        setTrends(result.data.trends);
-        setRecentActivity(result.data.recentActivity || []);
+      // API returns { stats, trends, recentActivity } directly
+      if (result.stats) {
+        setStats(result.stats);
+        setTrends(result.trends);
+        setRecentActivity(result.recentActivity || []);
       }
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
@@ -223,7 +224,7 @@ export default function DashboardPage() {
           icon="ri-user-line"
           color="primary"
           trend={trends ? { value: Math.abs(trends.clientsTrend), isPositive: trends.clientsTrend >= 0 } : undefined}
-          href="/admin/clients"
+          href="/admin/dashboard/clients"
         />
         <StatCard
           title={t.dashboard.activeCases}
@@ -238,7 +239,7 @@ export default function DashboardPage() {
           value={stats?.pendingDocuments || 0}
           icon="ri-file-warning-line"
           color="accent"
-          href="/admin/documents"
+          href="/admin/dashboard/documents"
         />
         <StatCard
           title={t.dashboard.newLeads}
@@ -265,7 +266,7 @@ export default function DashboardPage() {
         <DonutChart 
           data={documentStatus}
           title={t.dashboard.documentStatus}
-          href="/admin/documents"
+          href="/admin/dashboard/documents"
           total={docTotal}
         />
         
@@ -302,19 +303,19 @@ export default function DashboardPage() {
 
       {/* Quick Links Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Link href="/admin/clients" className="flex items-center gap-3 p-3 bg-white rounded-lg border border-neutral-200 hover:border-primary hover:shadow-sm transition-all">
+        <Link href="/admin/dashboard/clients" className="flex items-center gap-3 p-3 bg-white rounded-lg border border-neutral-200 hover:border-primary hover:shadow-sm transition-all">
           <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
             <i className="ri-user-line text-primary" aria-hidden="true"></i>
           </div>
           <span className="text-sm font-medium text-neutral-700">{t.dashboard.viewClients}</span>
         </Link>
-        <Link href="/admin/clients/new" className="flex items-center gap-3 p-3 bg-white rounded-lg border border-neutral-200 hover:border-secondary hover:shadow-sm transition-all">
+        <Link href="/admin/dashboard/clients/new" className="flex items-center gap-3 p-3 bg-white rounded-lg border border-neutral-200 hover:border-secondary hover:shadow-sm transition-all">
           <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center">
             <i className="ri-user-add-line text-secondary" aria-hidden="true"></i>
           </div>
           <span className="text-sm font-medium text-neutral-700">{t.dashboard.addClient}</span>
         </Link>
-        <Link href="/admin/documents" className="flex items-center gap-3 p-3 bg-white rounded-lg border border-neutral-200 hover:border-amber-500 hover:shadow-sm transition-all">
+        <Link href="/admin/dashboard/documents" className="flex items-center gap-3 p-3 bg-white rounded-lg border border-neutral-200 hover:border-amber-500 hover:shadow-sm transition-all">
           <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
             <i className="ri-folder-line text-amber-600" aria-hidden="true"></i>
           </div>

@@ -36,7 +36,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
 
   const checkSession = async () => {
     try {
-      const res = await fetch('/api/admin/auth/session.php', {
+      const res = await fetch('/api/admin/auth/session', {
         credentials: 'include',
       });
       
@@ -56,7 +56,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string, rememberMe = false) => {
     try {
-      const res = await fetch('/api/admin/auth/login.php', {
+      const res = await fetch('/api/admin/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -80,7 +80,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await fetch('/api/admin/auth/logout.php', {
+      await fetch('/api/admin/auth/logout', {
         method: 'POST',
         credentials: 'include',
       });

@@ -484,13 +484,20 @@ export default function EligibilityFlow({ locale }: { locale: Locale }) {
         setResultType(result);
 
         // Submit lead
-        await fetch('/api/leads.php', {
+        await fetch('/api/leads', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            ...contactInfo,
+            name: contactInfo.name,
+            email: contactInfo.email,
+            phone: contactInfo.phone,
+            country: contactInfo.country,
+            serviceType: 'citizenship',
             answers,
             eligibility_result: result,
+            consent: contactInfo.consent,
+            consentVersion: 'v1',
+            source: 'eligibility',
             locale,
           }),
         });

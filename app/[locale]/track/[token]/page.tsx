@@ -65,7 +65,7 @@ export default function ClientTrackerPage() {
 
   const fetchApplication = useCallback(async () => {
     try {
-      const res = await fetch(`/api/admin/applications.php?token=${token}`);
+      const res = await fetch(`/api/admin/applications?token=${token}`);
       const data = await res.json();
       
       if (!data.success) {

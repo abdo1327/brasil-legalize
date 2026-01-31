@@ -105,11 +105,15 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
 
   const fetchApplication = useCallback(async () => {
     try {
-      const response = await fetch(`/api/admin/applications.php?id=${params.id}`);
+      const response = await fetch(`/api/admin/applications?id=${params.id}`, {
+        credentials: 'include',
+      });
       const data = await response.json();
       
       if (data.success) {
-        setApplication(data.data);
+        // Handle both single item and array response
+        const app = data.application || data.data || (data.items && data.items[0]) || null;
+        setApplication(app);
       }
     } catch (error) {
       console.error('Error fetching application:', error);
@@ -126,7 +130,7 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
     if (!newNote.trim() || !application) return;
 
     try {
-      const response = await fetch(`/api/admin/applications.php?id=${params.id}`, {
+      const response = await fetch(`/api/admin/applications?id=${params.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -150,9 +154,10 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
     if (!newStatus || !application) return;
 
     try {
-      const response = await fetch('/api/admin/applications.php', {
+      const response = await fetch('/api/admin/applications', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           id: application.id,
           status: newStatus,
@@ -175,7 +180,7 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
 
   const updateDocumentStatus = async (docId: string, status: 'approved' | 'rejected', reason?: string) => {
     try {
-      const response = await fetch(`/api/admin/applications.php?id=${params.id}`, {
+      const response = await fetch(`/api/admin/applications?id=${params.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -234,7 +239,7 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
           <Link
-            href="/admin/clients"
+            href="/admin/dashboard/clients"
             className="p-1.5 hover:bg-neutral-100 rounded-lg transition-colors"
           >
             <i className="ri-arrow-left-line text-lg text-neutral-500" aria-hidden="true"></i>

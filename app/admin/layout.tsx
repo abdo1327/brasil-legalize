@@ -13,10 +13,10 @@ export default function AdminRootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <AdminAuthProvider>
-      <div className="min-h-screen bg-neutral-50" dir="ltr" lang="en">
+    <div className="min-h-screen bg-neutral-50" dir="ltr" lang="en">
+      <AdminAuthProvider>
         {children}
-      </div>
-    </AdminAuthProvider>
+      </AdminAuthProvider>
+    </div>
   );
 }

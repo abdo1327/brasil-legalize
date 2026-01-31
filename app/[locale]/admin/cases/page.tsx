@@ -12,7 +12,7 @@ export default function AdminCasesPage() {
   const [cases, setCases] = useState<CaseItem[]>([]);
 
   useEffect(() => {
-    fetch("/api/cases.php")
+    fetch("/api/admin/cases", { credentials: 'include' })
       .then((res) => res.json())
       .then((data) => setCases(data.items ?? []))
       .catch(() => setCases([]));

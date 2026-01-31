@@ -1,52 +1,36 @@
 [
   {
     "id": "CLT-2026-00001",
-    "lead_id": 1769809501591,
-    "name": "Test User",
-    "email": "test@example.com",
-    "phone": "+5511999999999",
-    "whatsapp": "+5511999999999",
-    "city": "São Paulo",
-    "country": "BR",
+    "lead_id": null,
+    "name": "sad22",
+    "email": "abdo1327907@gmail.com",
+    "phone": "322",
+    "whatsapp": "213",
+    "city": "drfeswr",
+    "country": "MX",
     "locale": "en",
     "avatar_url": null,
     "service_type": "visa",
     "package": "complete",
     "family_adults": 2,
-    "family_children": 1,
-    "expected_travel_date": "2026-03-15",
+    "family_children": 0,
+    "expected_travel_date": null,
     "expected_due_date": null,
-    "source": "eligibility",
-    "referral_source": null,
+    "source": "manual",
+    "referral_source": "eqwe",
     "is_historical": false,
-    "tags": ["priority", "vip"],
+    "tags": [],
     "financial": {
       "total_paid": 0,
-      "total_due": 5000,
+      "total_due": 2,
       "currency": "USD",
       "payments": []
     },
-    "cases": ["APP-2026-00001"],
-    "notes": [
-      {
-        "id": "note-001",
-        "content": "Initial contact from eligibility form",
-        "created_at": "2026-01-30T21:45:01.591Z",
-        "created_by": "system"
-      }
-    ],
-    "communication": [
-      {
-        "id": "comm-001",
-        "type": "email",
-        "subject": "Welcome to Brasil Legalize",
-        "content": "Welcome email sent",
-        "sent_at": "2026-01-30T21:46:00.000Z",
-        "sent_by": "system"
-      }
-    ],
-    "created_at": "2026-01-30T21:45:01.591Z",
-    "updated_at": "2026-01-30T21:45:01.591Z",
-    "created_by": "system"
+    "cases": [],
+    "notes": [],
+    "communication": [],
+    "created_at": "2026-01-31T18:42:23.894Z",
+    "updated_at": "2026-01-31T18:42:23.894Z",
+    "created_by": "Systasdem Administraewtor"
   }
 ]

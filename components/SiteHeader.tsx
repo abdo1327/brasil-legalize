@@ -310,7 +310,7 @@ export function SiteHeader({ locale }: SiteHeaderProps) {
               {dict.cta.checkEligibility}
             </Link>
             <Link
-              href={`/${locale}/book`}
+              href={`/${locale}/apply`}
               className="btn-primary text-sm px-4 py-2"
             >
               {dict.cta.submit}

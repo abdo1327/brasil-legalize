@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAdminAuth } from '@/lib/admin/auth';
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const { login, isAuthenticated, isLoading: authLoading } = useAdminAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -12,31 +14,27 @@ export default function AdminLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      router.push('/admin/dashboard');
+    }
+  }, [authLoading, isAuthenticated, router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
-    try {
-      const res = await fetch('/api/admin/auth/login.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email, password, rememberMe }),
-      });
+    const result = await login(email, password, rememberMe);
 
-      const data = await res.json();
-
-      if (data.success) {
-        router.push('/admin/dashboard');
-      } else {
-        setError(data.message || 'Login failed');
-      }
-    } catch (err) {
-      setError('Network error. Please try again.');
-    } finally {
-      setIsLoading(false);
+    if (result.success) {
+      router.push('/admin/dashboard');
+    } else {
+      setError(result.error || 'Login failed');
     }
+    
+    setIsLoading(false);
   };
 
   return (
@@ -85,7 +83,7 @@ export default function AdminLoginPage() {
                   required
                   autoComplete="email"
                   className="w-full px-4 py-3 pl-11 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors"
-                  placeholder="admin@brasillegalize.com"
+                  placeholder="admin@maocean360.com"
                 />
                 <i className="ri-mail-line absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400" aria-hidden="true"></i>
               </div>

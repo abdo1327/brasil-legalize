@@ -420,16 +420,14 @@ export default function EligibilityAdminPage() {
           name: lead.name,
           email: lead.email,
           phone: lead.phone,
-          service_type: lead.service_type,
-          admin_name: 'Admin',
-          sendWelcomeEmail: false,
+          serviceType: lead.service_type,
         }),
       });
       const result = await response.json();
       if (result.success) {
         // Update lead status to converted
         await updateLeadStatus(lead.id, 'converted');
-        showSuccess(`Application ${result.data.id} created for ${lead.name}`);
+        showSuccess(`Application ${result.application.application_id} created for ${lead.name}`);
       } else {
         setError(result.error || 'Failed to create application');
       }
@@ -440,7 +438,7 @@ export default function EligibilityAdminPage() {
     }
   };
 
-  const getResultBadgeColor = (type: string) => {
+  const getResultBadgeColor = (type: string | null | undefined) => {
     switch (type) {
       case 'likely_eligible': return 'bg-green-100 text-green-800';
       case 'may_need_review': return 'bg-amber-100 text-amber-800';
@@ -449,7 +447,7 @@ export default function EligibilityAdminPage() {
     }
   };
 
-  const getStatusBadgeColor = (status: string) => {
+  const getStatusBadgeColor = (status: string | null | undefined) => {
     switch (status) {
       case 'new': return 'bg-primary/10 text-primary';
       case 'converted': return 'bg-green-100 text-green-800';
@@ -457,7 +455,7 @@ export default function EligibilityAdminPage() {
     }
   };
 
-  const getResultIcon = (type: string) => {
+  const getResultIcon = (type: string | null | undefined) => {
     switch (type) {
       case 'likely_eligible': return 'ri-checkbox-circle-line';
       case 'may_need_review': return 'ri-information-line';
@@ -911,17 +909,21 @@ export default function EligibilityAdminPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="text-sm text-neutral-700 capitalize">{lead.service_type}</span>
+                          <span className="text-sm text-neutral-700 capitalize">{lead.service_type || 'N/A'}</span>
                         </td>
                         <td className="px-6 py-4">
-                          <span className={`text-xs px-2 py-1 rounded inline-flex items-center gap-1 ${getResultBadgeColor(lead.eligibility_result)}`}>
-                            <i className={getResultIcon(lead.eligibility_result)} aria-hidden="true"></i>
-                            {lead.eligibility_result.replace(/_/g, ' ')}
-                          </span>
+                          {lead.eligibility_result ? (
+                            <span className={`text-xs px-2 py-1 rounded inline-flex items-center gap-1 ${getResultBadgeColor(lead.eligibility_result)}`}>
+                              <i className={getResultIcon(lead.eligibility_result)} aria-hidden="true"></i>
+                              {lead.eligibility_result.replace(/_/g, ' ')}
+                            </span>
+                          ) : (
+                            <span className="text-xs px-2 py-1 rounded bg-neutral-100 text-neutral-500">No result</span>
+                          )}
                         </td>
                         <td className="px-6 py-4">
                           <span className={`text-xs px-2 py-1 rounded inline-flex items-center gap-1 ${getStatusBadgeColor(lead.status)}`}>
-                            {lead.status === 'new' ? 'New' : 'Converted'}
+                            {lead.status === 'new' ? 'New' : lead.status === 'converted' ? 'Converted' : lead.status || 'New'}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-sm text-neutral-500">

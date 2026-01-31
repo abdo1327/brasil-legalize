@@ -16,7 +16,7 @@ function getBaseUrl() {
   return (
     process.env.NEXT_PUBLIC_BASE_URL ||
     process.env.APP_URL ||
-    "https://brasillegalize.com"
+    "https://maocean360.com"
   ).replace(/\/$/, "");
 }
 

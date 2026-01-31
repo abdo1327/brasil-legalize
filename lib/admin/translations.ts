@@ -200,6 +200,8 @@ export interface AdminDictionary {
     dashboard: string;
     applications: string;
     clients: string;
+    contacts: string;
+    notifications: string;
     documents: string;
     eligibility: string;
     pricing: string;
@@ -403,6 +405,8 @@ const en: AdminDictionary = {
     dashboard: 'Dashboard',
     applications: 'Applications',
     clients: 'Clients',
+    contacts: 'Contacts',
+    notifications: 'Notifications',
     documents: 'Documents',
     eligibility: 'Eligibility',
     pricing: 'Pricing',
@@ -606,6 +610,8 @@ const ptBr: AdminDictionary = {
     dashboard: 'Painel',
     applications: 'Aplicações',
     clients: 'Clientes',
+    contacts: 'Contatos',
+    notifications: 'Notificações',
     documents: 'Documentos',
     eligibility: 'Elegibilidade',
     pricing: 'Preços',

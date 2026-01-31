@@ -476,15 +476,19 @@ export function PackageSection({ locale }: PackageSectionProps) {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await fetch('/api/leads.php', {
+      await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name,
           email,
           phone,
-          message: `Package Interest: ${selectedPackage}\n\n${message}`,
+          serviceType: 'package-interest',
+          answers: { package: selectedPackage, message },
+          consent: true,
+          consentVersion: 'v1',
           source: 'package-quote',
+          locale,
         }),
       });
       setSubmitSuccess(true);

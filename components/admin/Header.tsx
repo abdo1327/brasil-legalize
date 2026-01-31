@@ -84,8 +84,8 @@ export function AdminHeader() {
       const res = await fetch('/api/admin/notifications?limit=10');
       const data = await res.json();
       if (data.success) {
-        setNotifications(data.data);
-        setUnreadCount(data.unreadCount);
+        setNotifications(data.items || []);
+        setUnreadCount(data.unreadCount || 0);
       }
     } catch (e) {
       console.error('Failed to fetch notifications:', e);
@@ -321,7 +321,7 @@ export function AdminHeader() {
                 <div className="flex items-center justify-between px-4 py-2 border-b border-neutral-100 bg-neutral-50">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-neutral-700">Notifications</span>
-                    {notifications.length > 0 && (
+                    {(notifications?.length || 0) > 0 && (
                       <span className="px-1.5 py-0.5 text-xs bg-neutral-200 text-neutral-600 rounded-full">
                         {notifications.length}
                       </span>
@@ -338,7 +338,7 @@ export function AdminHeader() {
                 </div>
                 
                 <div className="max-h-72 overflow-y-auto">
-                  {notifications.length === 0 ? (
+                  {(notifications?.length || 0) === 0 ? (
                     <div className="px-4 py-6 text-center text-neutral-500">
                       <i className="ri-notification-off-line text-2xl mb-2 block opacity-50"></i>
                       <p className="text-xs">No notifications yet</p>
@@ -381,7 +381,7 @@ export function AdminHeader() {
 
                 <div className="px-3 py-2 border-t border-neutral-100 bg-neutral-50 flex items-center justify-between">
                   <Link 
-                    href="/admin/notifications"
+                    href="/admin/dashboard/notifications"
                     onClick={() => setShowNotifications(false)}
                     className="text-xs text-primary hover:text-primary/80 font-medium flex items-center gap-1"
                   >
@@ -389,7 +389,7 @@ export function AdminHeader() {
                     View all history
                   </Link>
                   <span className="text-xs text-neutral-400">
-                    {notifications.length} total
+                    {notifications?.length || 0} total
                   </span>
                 </div>
               </div>

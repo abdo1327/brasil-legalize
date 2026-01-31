@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { AdminAuthProvider, useAdminAuth } from '@/lib/admin/auth';
+import { useAdminAuth } from '@/lib/admin/auth';
 import { AdminLocaleProvider } from '@/components/admin/AdminLocaleProvider';
 import { AdminSidebar } from '@/components/admin/Sidebar';
 import { AdminHeader } from '@/components/admin/Header';
@@ -49,10 +49,8 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AdminAuthProvider>
-      <AdminLocaleProvider>
-        <DashboardLayoutContent>{children}</DashboardLayoutContent>
-      </AdminLocaleProvider>
-    </AdminAuthProvider>
+    <AdminLocaleProvider>
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+    </AdminLocaleProvider>
   );
 }

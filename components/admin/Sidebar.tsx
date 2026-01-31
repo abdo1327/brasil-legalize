@@ -16,10 +16,12 @@ interface NavItem {
 const navigationItems: NavItem[] = [
   { key: 'dashboard', href: '/admin/dashboard', icon: 'ri-dashboard-line' },
   { key: 'applications', href: '/admin/dashboard/applications', icon: 'ri-flow-chart' },
-  { key: 'clients', href: '/admin/clients', icon: 'ri-user-line' },
-  { key: 'documents', href: '/admin/documents', icon: 'ri-folder-line' },
+  { key: 'clients', href: '/admin/dashboard/clients', icon: 'ri-user-line' },
+  { key: 'contacts', href: '/admin/dashboard/contacts', icon: 'ri-mail-line' },
+  { key: 'notifications', href: '/admin/dashboard/notifications', icon: 'ri-notification-line' },
+  { key: 'documents', href: '/admin/dashboard/documents', icon: 'ri-folder-line' },
   { key: 'eligibility', href: '/admin/dashboard/eligibility', icon: 'ri-checkbox-circle-line' },
-  { key: 'pricing', href: '/admin/pricing', icon: 'ri-price-tag-3-line', permission: 'pricing.view' },
+  { key: 'pricing', href: '/admin/dashboard/pricing', icon: 'ri-price-tag-3-line', permission: 'pricing.view' },
 ];
 
 // Export state setter for Header to control mobile menu
@@ -71,6 +73,8 @@ export function AdminSidebar() {
       dashboard: t.sidebar.dashboard,
       applications: t.sidebar.applications,
       clients: t.sidebar.clients,
+      contacts: t.sidebar.contacts || 'Contacts',
+      notifications: t.sidebar.notifications || 'Notifications',
       documents: t.sidebar.documents,
       eligibility: t.sidebar.eligibility,
       pricing: t.sidebar.pricing,

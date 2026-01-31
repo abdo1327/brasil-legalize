@@ -356,7 +356,7 @@ export default function BuilderPage() {
       .join(', ');
 
     try {
-      await fetch('/api/leads.php', {
+      await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
