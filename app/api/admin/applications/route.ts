@@ -13,7 +13,14 @@ import {
   query,
 } from '@/lib/api-utils';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialization of Resend to avoid build-time errors
+let resend: Resend | null = null;
+function getResend(): Resend | null {
+  if (!resend && process.env.RESEND_API_KEY) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resend;
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -268,28 +275,33 @@ export async function PATCH(request: NextRequest) {
       const trackerUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://maocean360.com'}/en/track/${updatedApp.token}`;
       
       try {
-        await resend.emails.send({
-          from: 'Brasil Legalize <noreply@maocean360.com>',
-          to: [updatedApp.email],
-          subject: 'Payment Received - Your Portal Access is Ready!',
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2 style="color: #059669;">Payment Received - Thank You!</h2>
-              <p>Dear ${updatedApp.name},</p>
-              <p>We have received your payment. Thank you for choosing Brasil Legalize!</p>
-              <p>Your client portal is now ready. You can track your application progress using the link below:</p>
-              <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <p style="margin: 0 0 10px 0;"><strong>Portal Link:</strong></p>
-                <a href="${trackerUrl}" style="color: #059669; word-break: break-all;">${trackerUrl}</a>
-                <p style="margin: 15px 0 5px 0;"><strong>Password:</strong></p>
-                <code style="background: #fff; padding: 5px 10px; border-radius: 4px; font-size: 16px;">${updatedApp.password}</code>
+        const resendClient = getResend();
+        if (resendClient) {
+          await resendClient.emails.send({
+            from: 'Brasil Legalize <noreply@maocean360.com>',
+            to: [updatedApp.email],
+            subject: 'Payment Received - Your Portal Access is Ready!',
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #059669;">Payment Received - Thank You!</h2>
+                <p>Dear ${updatedApp.name},</p>
+                <p>We have received your payment. Thank you for choosing Brasil Legalize!</p>
+                <p>Your client portal is now ready. You can track your application progress using the link below:</p>
+                <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                  <p style="margin: 0 0 10px 0;"><strong>Portal Link:</strong></p>
+                  <a href="${trackerUrl}" style="color: #059669; word-break: break-all;">${trackerUrl}</a>
+                  <p style="margin: 15px 0 5px 0;"><strong>Password:</strong></p>
+                  <code style="background: #fff; padding: 5px 10px; border-radius: 4px; font-size: 16px;">${updatedApp.password}</code>
+                </div>
+                <p style="color: #666; font-size: 14px;">Keep your password secure. You'll need it to access your portal.</p>
+                <p>Best regards,<br>Brasil Legalize Team</p>
               </div>
-              <p style="color: #666; font-size: 14px;">Keep your password secure. You'll need it to access your portal.</p>
-              <p>Best regards,<br>Brasil Legalize Team</p>
-            </div>
-          `,
-        });
-        console.log('Welcome email sent to:', updatedApp.email);
+            `,
+          });
+          console.log('Welcome email sent to:', updatedApp.email);
+        } else {
+          console.log('Resend not configured, skipping welcome email');
+        }
       } catch (emailError) {
         console.error('Failed to send welcome email:', emailError);
         // Don't fail the update if email fails

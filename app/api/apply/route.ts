@@ -11,7 +11,14 @@ const pool = new Pool({
   port: 5432,
 });
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialization of Resend to avoid build-time errors
+let resend: Resend | null = null;
+function getResend(): Resend | null {
+  if (!resend && process.env.RESEND_API_KEY) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resend;
+}
 
 async function generateClientId(): Promise<string> {
   const year = new Date().getFullYear();
@@ -257,13 +264,18 @@ export async function POST(request: NextRequest) {
     // Send confirmation email via Resend
     const emailTemplate = emailTemplates[locale as keyof typeof emailTemplates] || emailTemplates.en;
     try {
-      const emailResult = await resend.emails.send({
-        from: 'Brasil Legalize <noreply@maocean360.com>',
-        to: [email],
-        subject: emailTemplate.subject,
-        text: emailTemplate.body(name, applicationId),
-      });
-      console.log('Email sent successfully:', emailResult);
+      const resendClient = getResend();
+      if (resendClient) {
+        const emailResult = await resendClient.emails.send({
+          from: 'Brasil Legalize <noreply@maocean360.com>',
+          to: [email],
+          subject: emailTemplate.subject,
+          text: emailTemplate.body(name, applicationId),
+        });
+        console.log('Email sent successfully:', emailResult);
+      } else {
+        console.log('Resend not configured, skipping email');
+      }
     } catch (emailError) {
       // Log email error but don't fail the application submission
       console.error('Failed to send confirmation email:', emailError);
