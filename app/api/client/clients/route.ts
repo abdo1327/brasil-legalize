@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import { Pool } from 'pg';
+
+const pool = new Pool({
+  user: 'postgres',
+  host: 'localhost',
+  database: 'brasil_legalize',
+  password: '1234',
+  port: 5432,
+});
 
 async function generateClientId(): Promise<string> {
   const year = new Date().getFullYear();

@@ -3,14 +3,13 @@ import Link from "next/link";
 import { getDictionary, isRTL, type Locale, locales } from "../../../../lib/i18n";
 import { PackageSection } from "../../../../components/PackageSection";
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: Locale }> }): Promise<Metadata> {
-  const { locale } = await params;
-  const dict = getDictionary(locale);
+export async function generateMetadata({ params }: { params: { locale: Locale } }): Promise<Metadata> {
+  const dict = getDictionary(params.locale);
   return {
     title: dict.services.title,
     description: dict.services.description,
     alternates: {
-      canonical: `/${locale}/services`,
+      canonical: `/${params.locale}/services`,
       languages: Object.fromEntries(
         locales.map((l) => [l === "pt-br" ? "pt-BR" : l, `/${l}/services`])
       ),
@@ -28,10 +27,9 @@ const serviceIcons: Record<string, { icon: string; color: string }> = {
   deportation: { icon: 'ri-shield-user-line', color: 'accent' },
 };
 
-export default async function ServicesPage({ params }: { params: Promise<{ locale: Locale }> }) {
-  const { locale } = await params;
-  const dict = getDictionary(locale);
-  const rtl = isRTL(locale);
+export default async function ServicesPage({ params }: { params: { locale: Locale } }) {
+  const dict = getDictionary(params.locale);
+  const rtl = isRTL(params.locale);
   const services = dict.services.items;
 
   return (
@@ -98,7 +96,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ local
       </section>
 
       {/* Packages Section */}
-      <PackageSection locale={locale} />
+      <PackageSection locale={params.locale} />
 
       {/* CTA */}
       <section className="bg-neutral-100 py-16">
@@ -120,7 +118,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ local
               WhatsApp
             </a>
             <Link
-              href={`/${locale}/contact`}
+              href={`/${params.locale}/contact`}
               className="inline-flex items-center gap-2 rounded-full border-2 border-primary bg-white px-8 py-4 font-bold text-primary transition-all hover:bg-primary hover:text-white"
             >
               <i className="ri-mail-line text-xl"></i>

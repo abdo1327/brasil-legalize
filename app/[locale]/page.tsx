@@ -33,10 +33,9 @@ import { cn } from "../../lib/utils";
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ locale: string }>;
+  params: { locale: string };
 }): Promise<Metadata> {
-  const { locale: localeParam } = await params;
-  const locale = localeParam as Locale;
+  const locale = params.locale as Locale;
   const dict = getDictionary(locale);
 
   return {
@@ -169,13 +168,12 @@ function IconCheck({ className }: { className?: string }) {
 // PAGE COMPONENT
 // ============================================================================
 
-export default async function HomePage({
+export default function HomePage({
   params,
 }: {
-  params: Promise<{ locale: string }>;
+  params: { locale: string };
 }) {
-  const { locale: localeParam } = await params;
-  const locale = localeParam as Locale;
+  const locale = params.locale as Locale;
   const dict = getDictionary(locale);
   const rtl = isRTL(locale);
 
@@ -229,17 +227,16 @@ export default async function HomePage({
               {dict.home.hero.description}
             </p>
 
-            {/* CTA Buttons - 3 buttons */}
+            {/* CTA Buttons */}
             <div
               className={cn(
-                "flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4",
+                "flex flex-col sm:flex-row items-center justify-center gap-4",
                 rtl && "sm:flex-row-reverse"
               )}
             >
-              {/* Primary: Apply Now */}
               <Link
-                href={`/${locale}/apply`}
-                className="btn-primary group w-full sm:w-auto px-6 py-3 text-base shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-all"
+                href={`/${locale}/book`}
+                className="btn-primary group w-full sm:w-auto px-8 py-3.5 text-base shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-all"
               >
                 {dict.cta.submit}
                 <IconArrowRight
@@ -249,17 +246,9 @@ export default async function HomePage({
                   )}
                 />
               </Link>
-              {/* Accent: Book Consultation (Yellow) */}
-              <Link
-                href={`/${locale}/book`}
-                className="w-full sm:w-auto px-6 py-3 text-base font-semibold rounded-lg bg-accent text-slate-900 hover:bg-accent/90 shadow-lg shadow-accent/30 hover:shadow-xl hover:shadow-accent/40 transition-all flex items-center justify-center gap-2"
-              >
-                {dict.cta.scheduleConsult}
-              </Link>
-              {/* Secondary: View Services */}
               <Link
                 href={`/${locale}/services`}
-                className="btn-secondary w-full sm:w-auto px-6 py-3 text-base"
+                className="btn-secondary w-full sm:w-auto px-8 py-3.5 text-base"
               >
                 {dict.cta.viewServices}
               </Link>

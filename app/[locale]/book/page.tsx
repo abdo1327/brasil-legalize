@@ -3,7 +3,7 @@ import { CalendlyEmbed } from '@/components/CalendlyEmbed';
 import { Locale } from '@/lib/i18n';
 
 interface BookingPageProps {
-  params: Promise<{ locale: Locale }>;
+  params: { locale: Locale };
 }
 
 const translations = {
@@ -50,8 +50,7 @@ const translations = {
 };
 
 export async function generateMetadata({ params }: BookingPageProps): Promise<Metadata> {
-  const { locale } = await params;
-  const t = translations[locale] || translations.en;
+  const t = translations[params.locale] || translations.en;
   
   return {
     title: t.title,
@@ -59,8 +58,8 @@ export async function generateMetadata({ params }: BookingPageProps): Promise<Me
   };
 }
 
-export default async function BookingPage({ params }: BookingPageProps) {
-  const { locale } = await params;
+export default function BookingPage({ params }: BookingPageProps) {
+  const { locale } = params;
   const t = translations[locale] || translations.en;
   const isRTL = locale === 'ar';
   

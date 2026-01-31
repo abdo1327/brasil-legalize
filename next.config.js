@@ -2,9 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  experimental: {
-    serverComponentsExternalPackages: ['argon2', 'pg'],
-  },
+  outputFileTracing: false
 };
 
 module.exports = nextConfig;

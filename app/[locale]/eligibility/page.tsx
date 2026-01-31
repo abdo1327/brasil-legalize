@@ -5,10 +5,9 @@ import EligibilityFlow from '@/components/eligibility/EligibilityFlow';
 export async function generateMetadata({ 
   params 
 }: { 
-  params: Promise<{ locale: Locale }> 
+  params: { locale: Locale } 
 }): Promise<Metadata> {
-  const { locale } = await params;
-  const dict = getDictionary(locale);
+  const dict = getDictionary(params.locale);
   const eligibilityDict = dict.eligibility || {};
   
   return {
@@ -17,14 +16,13 @@ export async function generateMetadata({
   };
 }
 
-export default async function EligibilityPage({ 
+export default function EligibilityPage({ 
   params 
 }: { 
-  params: Promise<{ locale: Locale }> 
+  params: { locale: Locale } 
 }) {
-  const { locale } = await params;
-  const dict = getDictionary(locale);
-  const isRTL = locale === 'ar';
+  const dict = getDictionary(params.locale);
+  const isRTL = params.locale === 'ar';
   const eligibilityDict = dict.eligibility || {};
 
   return (
@@ -41,7 +39,7 @@ export default async function EligibilityPage({
         </div>
 
         {/* Eligibility Flow */}
-        <EligibilityFlow locale={locale} />
+        <EligibilityFlow locale={params.locale} />
       </div>
     </div>
   );

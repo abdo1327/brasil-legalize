@@ -19,15 +19,6 @@ export function generateSecureToken(): string {
   return crypto.randomBytes(32).toString('hex');
 }
 
-export function generatePassword(length: number = 8): string {
-  const chars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let password = '';
-  for (let i = 0; i < length; i++) {
-    password += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return password;
-}
-
 export function generateApplicationId(): string {
   const year = new Date().getFullYear();
   const random = Math.floor(10000 + Math.random() * 90000);

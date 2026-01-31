@@ -1,30 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import fs from 'fs';
+import path from 'path';
+import { jsonResponse } from '@/lib/api-utils';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
-  // Simple health check - test database connection
-  let dbStatus = 'unknown';
-  let dbError = null;
-  
+  const storageDir = path.join(process.cwd(), 'storage', 'data');
+  const storageExists = fs.existsSync(storageDir);
+
+  // Check if data files are accessible
+  let dataFilesStatus = 'ok';
   try {
-    const result = await pool.query('SELECT 1 as test');
-    dbStatus = result.rows[0]?.test === 1 ? 'connected' : 'error';
-  } catch (error: any) {
-    dbStatus = 'error';
-    dbError = error.message;
+    if (!storageExists) {
+      fs.mkdirSync(storageDir, { recursive: true });
+    }
+    // Test write
+    const testFile = path.join(storageDir, '.health-check');
+    fs.writeFileSync(testFile, Date.now().toString());
+    fs.unlinkSync(testFile);
+  } catch (error) {
+    dataFilesStatus = 'error: ' + String(error);
   }
 
-  return NextResponse.json({
-    status: dbStatus === 'connected' ? 'ok' : 'degraded',
+  return jsonResponse({
+    status: 'ok',
     timestamp: new Date().toISOString(),
+    version: process.env.npm_package_version || '1.0.0',
     environment: process.env.NODE_ENV || 'development',
-    database: {
-      status: dbStatus,
-      error: dbError,
-      hasUrl: !!process.env.DATABASE_URL,
+    checks: {
+      storage: dataFilesStatus,
+      nodeVersion: process.version,
     },
-    nodeVersion: process.version,
+    endpoints: {
+      leads: '/api/leads',
+      tokens: '/api/tokens',
+      status: '/api/status',
+      upload: '/api/upload',
+      pricing: '/api/pricing',
+      consent: '/api/consent',
+      notify: '/api/notify',
+      audit: '/api/audit',
+      admin: {
+        login: '/api/admin/auth/login',
+        logout: '/api/admin/auth/logout',
+        session: '/api/admin/auth/session',
+        cases: '/api/admin/cases',
+        clients: '/api/client/clients',
+      },
+    },
   });
 }

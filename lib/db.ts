@@ -1,30 +1,14 @@
 import { Pool } from 'pg';
 
 // PostgreSQL connection pool
-// Supports DATABASE_URL (for Neon/production) or individual env vars (for local dev)
-
-// Production Neon database URL (fallback if env var not available)
-const NEON_URL = 'postgresql://neondb_owner:npg_XdQ1ksacEnN0@ep-cool-moon-ahkp7lkk-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require';
-
-// Get connection string - prioritize env var, fallback to Neon URL in production
-const getConnectionString = () => {
-  if (process.env.DATABASE_URL) {
-    return process.env.DATABASE_URL;
-  }
-  // In production, use Neon; in dev, use localhost
-  if (process.env.NODE_ENV === 'production') {
-    return NEON_URL;
-  }
-  return null;
-};
-
-const connectionString = getConnectionString();
-
+// Supports DATABASE_URL (Railway/Neon) or individual env vars (local dev)
 const pool = new Pool(
-  connectionString
+  process.env.DATABASE_URL
     ? {
-        connectionString,
-        ssl: { rejectUnauthorized: false },
+        connectionString: process.env.DATABASE_URL,
+        ssl: process.env.DATABASE_URL.includes('neon.tech') || process.env.DATABASE_URL.includes('railway')
+          ? { rejectUnauthorized: false }
+          : undefined,
       }
     : {
         user: process.env.PGUSER || 'postgres',

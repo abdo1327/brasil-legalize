@@ -25,7 +25,7 @@ import { ConsentManager } from "@/components/ConsentManager";
 import { cn } from "@/lib/utils";
 
 interface PrivacyPageProps {
-  params: Promise<{ locale: Locale }>;
+  params: { locale: Locale };
 }
 
 // Generate static params for all locales
@@ -39,8 +39,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: PrivacyPageProps): Promise<Metadata> {
-  const { locale } = await params;
-  const dict = getDictionary(locale);
+  const dict = getDictionary(params.locale);
 
   return {
     title: dict.privacy.metaTitle,
@@ -53,8 +52,8 @@ export async function generateMetadata({
   };
 }
 
-export default async function PrivacyPage({ params }: PrivacyPageProps) {
-  const { locale } = await params;
+export default function PrivacyPage({ params }: PrivacyPageProps) {
+  const { locale } = params;
   const dict = getDictionary(locale);
   const rtl = isRTL(locale);
   const cookieList = getCookieList();

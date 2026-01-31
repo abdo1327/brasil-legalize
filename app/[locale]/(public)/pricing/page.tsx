@@ -283,13 +283,13 @@ const pricingTranslations: Record<Locale, Record<string, string>> = {
 };
 
 interface PricingPageProps {
-  params: Promise<{
+  params: {
     locale: Locale;
-  }>;
+  };
 }
 
-export default async function PricingPage({ params }: PricingPageProps) {
-  const { locale } = await params;
+export default function PricingPage({ params }: PricingPageProps) {
+  const { locale } = params;
   const t = pricingTranslations[locale] || pricingTranslations.en;
   const isRTL = locale === 'ar';
 
