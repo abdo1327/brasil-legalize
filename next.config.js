@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  // Don't disable outputFileTracing - it breaks Railway/container deployments
+  // Standard build for Railway - no standalone due to route group issues
 };
 
 module.exports = nextConfig;
