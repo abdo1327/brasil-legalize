@@ -1,6 +1,6 @@
 [build]
 builder = "nixpacks"
-buildCommand = "npm ci --no-cache && npm run build"
+buildCommand = "npm install && npm run build"
 
 [deploy]
 startCommand = "npm run start"
@@ -12,3 +12,7 @@ restartPolicyMaxRetries = 3
 [nixpacks]
 providers = ["node"]
 nixPkgs = ["nodejs_20"]
+
+# Disable cache to avoid EBUSY errors
+[nixpacks.caches]
+enabled = false
